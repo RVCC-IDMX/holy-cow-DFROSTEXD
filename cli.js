@@ -22,10 +22,19 @@ If the program is invoked as cowthink then the cow will think its message instea
     W: {
       default: 40,
       type: 'number',
-      // CRASH ISSUE #10: No validation on width
-      // Users can pass: -W -10 (negative), -W 0 (zero), -W abc (NaN)
-      // This will cause the word-wrap logic to fail or create infinite loops.
-      // Test: cowsay -W 0 "test" or cowsay -W -5 "test"
+      // FIX #2: Added width validation to prevent crashes
+      coerce: (val) => {
+        if (typeof val !== 'number' || isNaN(val)) {
+          throw new Error('Width must be a valid number');
+        }
+        if (val < 1) {
+          throw new Error('Width must be at least 1');
+        }
+        if (val > 1000) {
+          throw new Error('Width too large (max 1000)');
+        }
+        return val;
+      },
     },
     f: {
       default: 'default',
