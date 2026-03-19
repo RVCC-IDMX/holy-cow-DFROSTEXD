@@ -111,7 +111,11 @@ If the program is invoked as cowthink then the cow will think its message instea
   })
   .boolean(['b', 'd', 'g', 'p', 's', 't', 'w', 'y', 'n', 'h', 'r', 'l'])
   .help()
-  .alias('h', 'help');
+  .alias('h', 'help')
+  // FIX #7: Add version flag and strict mode for better CLI experience
+  .version()  // Automatically reads version from package.json
+  .alias('v', 'version')
+  .strict();  // Rejects unknown options/flags (catches typos)
 
 const argv = yargs.argv;
 
