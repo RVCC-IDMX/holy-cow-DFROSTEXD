@@ -47,9 +47,41 @@ If the program is invoked as cowthink then the cow will think its message instea
     },
     f: {
       default: 'default',
-      // CRASH ISSUE #11: No validation that cow file exists
-      // If user passes -f nonexistentcow, the app will crash when trying to
-      // load the cow file. Should validate and show available cows.
+      // FIX #5: Added cow file validation to prevent crashes and help users with typos
+      describe: 'Cow file to use. Use -l to list all available cows.',
+      coerce: (cowName) => {
+        try {
+          // Access listSync directly from the cows module
+          const cows = require('./lib/cows');
+          const availableCows = cows.listSync();
+          
+          // Check if the cow exists in the list
+          if (!availableCows.includes(cowName)) {
+            // Try to find a similar cow name (starts with same letters)
+            const suggestion = availableCows.find(cow => 
+              cow.toLowerCase().startsWith(cowName.toLowerCase())
+            );
+            
+            let errorMsg = `Cow "${cowName}" not found.`;
+            if (suggestion) {
+              errorMsg += ` Did you mean "${suggestion}"?`;
+            }
+            errorMsg += '\nUse -l to list all available cows.';
+            
+            throw new Error(errorMsg);
+          }
+          
+          return cowName;
+        } catch (err) {
+          // If error message is about cow not found, re-throw it
+          if (err.message.includes('not found')) {
+            throw err;
+          }
+          // For other errors (like listSync failing), just return the cow name
+          // and let it fail later with a more specific error
+          return cowName;
+        }
+      },
     },
     think: {
       type: 'boolean',
@@ -120,21 +152,19 @@ function say() {
 
 function listCows() {
   require('./index').list((err, list) => {
-    // CRASH ISSUE #5: Throwing in async callback
-    // This throw happens inside a callback, so it won't be caught by try-catch
-    // in the outer scope. This creates an uncaught exception that crashes Node.js.
-    // Additionally, if 'err' is already an Error object, wrapping it in 
-    // new Error(err) creates a confusing error message like "Error: Error: message"
-    if (err) throw new Error(err);
+    // FIX #6: Proper error handling for listCows
+    if (err) {
+      console.error('Error listing cows:', err.message || err);
+      process.exit(1);
+    }
     
-    // POTENTIAL CRASH ISSUE #6: list might be undefined
-    // If the callback is called with (null, undefined) instead of (null, []),
-    // calling .join() on undefined will crash with:
-    // TypeError: Cannot read property 'join' of undefined
+    // Validate that list is an array before using it
+    if (!list || !Array.isArray(list)) {
+      console.error('Error: Could not retrieve cow list');
+      process.exit(1);
+    }
+    
     console.log(list.join('  '));
+    process.exit(0);
   });
-  
-  // CRASH ISSUE #7: No error exit code
-  // Even if the error is somehow handled, the process doesn't exit with code 1,
-  // so scripts using this CLI won't know an error occurred.
 }
