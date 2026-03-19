@@ -10,9 +10,13 @@ If the program is invoked as cowthink then the cow will think its message instea
   .options({
     e: {
       default: 'oo',
-      // CRASH ISSUE #8: No validation on eyes
-      // Users can pass ANY string (e.g., -e "TOOLONG" or -e ""). Eyes should be
-      // exactly 2 characters or the ASCII art will be misaligned/broken.
+      // FIX #3: Added eyes validation to ensure proper ASCII art formatting
+      coerce: (val) => {
+        if (typeof val !== 'string' || val.length !== 2) {
+          throw new Error('Eyes must be exactly 2 characters (e.g., "oo", "^^", "xx")');
+        }
+        return val;
+      },
     },
     T: {
       default: '  ',
