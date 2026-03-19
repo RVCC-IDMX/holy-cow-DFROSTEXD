@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+
+// Load modules once at the top for efficiency
+const cowsay = require('./index');
+
 const yargs = require('yargs')
 	.usage(`
 Usage: $0 [-e eye_string] [-f cowfile] [-h] [-l] [-n] [-T tongue_string] [-W column] [-bdgpstwy] text
@@ -141,8 +145,8 @@ if (argv.l) {
 
 function say() {
   // FIX #8: Added error handling to prevent crashes in say()
+  // FIX #9: Using cowsay module loaded at top instead of requiring here
   try {
-    const cowsay = require('./index');
     const think = /think$/.test(argv['$0']) || argv.think;
 
     console.log(think ? cowsay.think(argv) : cowsay.say(argv));
@@ -154,7 +158,8 @@ function say() {
 }
 
 function listCows() {
-  require('./index').list((err, list) => {
+  // FIX #9: Using cowsay module loaded at top instead of requiring here
+  cowsay.list((err, list) => {
     // FIX #6: Proper error handling for listCows
     if (err) {
       console.error('Error listing cows:', err.message || err);
