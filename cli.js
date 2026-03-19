@@ -70,24 +70,19 @@ if (argv.l) {
 } else if (argv._.length) {
   say();
 } else {
-  // CRASH ISSUE #1: Unhandled Promise Rejection
-  // This promise has no .catch() handler. If get-stdin rejects (e.g., read error,
-  // permission denied, stdin closed unexpectedly), it will cause an unhandled 
-  // promise rejection warning and crash the process in Node.js strict mode or
-  // future versions. This is a critical production bug.
+  // FIX #1: Added .catch() handler to prevent unhandled promise rejection
   require('get-stdin')().then((data) => {
     if (data) {
-      // CRASH ISSUE #2: Mutating argv object
-      // Directly mutating argv._ can cause unexpected behavior since yargs expects
-      // this to be immutable parsed arguments. While not an immediate crash, this
-      // is an anti-pattern that can lead to bugs if argv is accessed elsewhere.
       argv._ = [require('strip-final-newline')(data)];
       say();
     } else {
       yargs.showHelp();
     }
+  }).catch((err) => {
+    // Handle any errors from reading stdin gracefully
+    console.error('Error reading stdin:', err.message);
+    process.exit(1);
   });
-  // MISSING: .catch((err) => { console.error(err); process.exit(1); })
 }
 
 function say() {
