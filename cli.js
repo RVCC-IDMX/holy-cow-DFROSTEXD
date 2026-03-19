@@ -140,18 +140,17 @@ if (argv.l) {
 }
 
 function say() {
-  // POTENTIAL CRASH ISSUE #3: No error handling
-  // If require('./index') fails (missing file, syntax error), this will crash.
-  // If module.say() or module.think() throw an error (invalid cow file, 
-  // malformed input), the error will be uncaught and crash the process.
-  const module = require('./index');
-  const think = /think$/.test(argv['$0']) || argv.think;
+  // FIX #8: Added error handling to prevent crashes in say()
+  try {
+    const cowsay = require('./index');
+    const think = /think$/.test(argv['$0']) || argv.think;
 
-  // CRASH ISSUE #4: No input validation
-  // If argv.text is undefined and argv._ is also undefined/empty, 
-  // index.js will try to call .join() on undefined, causing:
-  // TypeError: Cannot read property 'join' of undefined
-  console.log(think ? module.think(argv) : module.say(argv));
+    console.log(think ? cowsay.think(argv) : cowsay.say(argv));
+    process.exit(0);
+  } catch (err) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
 }
 
 function listCows() {
