@@ -20,8 +20,13 @@ If the program is invoked as cowthink then the cow will think its message instea
     },
     T: {
       default: '  ',
-      // CRASH ISSUE #9: No validation on tongue
-      // Same as eyes - tongue must be exactly 2 characters or output breaks.
+      // FIX #4: Added tongue validation to ensure proper ASCII art formatting
+      coerce: (val) => {
+        if (typeof val !== 'string' || val.length !== 2) {
+          throw new Error('Tongue must be exactly 2 characters (e.g., "  ", "U ")');
+        }
+        return val;
+      },
     },
     W: {
       default: 40,
